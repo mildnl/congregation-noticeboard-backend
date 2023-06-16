@@ -1,0 +1,38 @@
+# Ignore compiled binaries and libraries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Ignore local development files
+.env
+.env.local
+.env.*.local
+.env.test
+.env.override
+.env.local.override
+.env.test.override
+
+# Ignore IDE and editor files
+.vscode/
+.idea/
+*.swp
+*~
+*.code-workspace
+
+# Ignore build and output directories
+build/
+dist/
+out/
+
+# Ignore dependency directories
+node_modules/
+vendor/
+
+# Ignore log files
+logs/
+*.log
+
+# Ignore macOS system files
+.DS_Store
+
