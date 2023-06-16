@@ -71,6 +71,3 @@ Contributions are welcome! If you find any issues or would like to suggest impro
 
 ### License
 This project is licensed under the [MIT License](README.md).
-
-### Contribution
-_Feel free to customize the README file according to your project's specific details and requirements._
