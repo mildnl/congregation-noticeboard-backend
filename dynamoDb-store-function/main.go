@@ -54,7 +54,7 @@ func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 
 	// Create an input for the PutItem operation
 	input := &dynamodb.PutItemInput{
-		TableName: aws.String(os.ExpandEnv("AWS_DYNAMO_TABLE_NAME")),
+		TableName: aws.String(os.Getenv("AWS_DYNAMO_TABLE_NAME")),
 		Item:      av,
 	}
 
