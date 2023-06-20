@@ -9,16 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
-var tableName string
+var (
+	tableName string
+)
 
 func init() {
 	// Load environment variables from .env file
@@ -29,12 +31,29 @@ func init() {
 
 	// Retrieve the environment variables
 	tableName = os.Getenv("AWS_DYNAMO_TABLE_NAME")
+
+	// Seed a new random generator with the current timestamp
+	rand.Seed(time.Now().UnixNano())
+}
+
+// Mock DynamoDB client for testing
+type mockDynamoDBClient struct{}
+
+func (m *mockDynamoDBClient) PutItemWithContext(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// Simulate a successful PutItem operation
+	return events.APIGatewayProxyResponse{
+		StatusCode: 200,
+		Body:       "Item stored successfully",
+		Headers: map[string]string{
+			"Content-Type":                "application/json",
+			"Access-Control-Allow-Origin": "*",
+		},
+	}, nil
 }
 
 func TestHandler(t *testing.T) {
-	seed := time.Now().UnixNano()
-	r := rand.New(rand.NewSource(seed))
-	id := r.Intn(1000)
+	rand.Seed(time.Now().UnixNano())
+	id := rand.Intn(1000)
 
 	// Prepare a sample APIGatewayProxyRequest for testing
 	requestBody := fmt.Sprintf(`{"Id": %d, "name": "Test Item"}`, id)
@@ -48,21 +67,16 @@ func TestHandler(t *testing.T) {
 	assert.Equal(t, 200, response.StatusCode)
 
 	// Assert the expected response body
-	assert.Equal(t, fmt.Sprintf("Item stored successfully: map[Id:%d name:Test Item]", id), response.Body)
+	assert.Equal(t, fmt.Sprintf("Item stored successfully: %+v", map[string]interface{}{"Id": id, "name": "Test Item"}), response.Body)
 
 	// Delete the testing entry
 	err = deleteItem(id)
-	if err != nil {
-		fmt.Println("Error deleting item:", err)
-	}
 	assert.NoError(t, err)
 
 	// Verify the deletion
 	item, err := getItem(id)
-	if err != nil {
-		fmt.Println("Error getting item:", err)
-	}
 	assert.Nil(t, item)
+	assert.NoError(t, err)
 }
 
 // deleteItem deletes the item with the specified ID from DynamoDB
@@ -122,11 +136,11 @@ func getItem(id int) (*Item, error) {
 	}
 
 	// Unmarshal the item into a struct
-	var item *Item
-	err = dynamodbattribute.UnmarshalMap(result.Item, item)
+	var item Item
+	err = dynamodbattribute.UnmarshalMap(result.Item, &item)
 	if err != nil {
 		return nil, err
 	}
 
-	return item, nil
+	return &item, nil
 }

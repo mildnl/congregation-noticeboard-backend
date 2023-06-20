@@ -52,20 +52,20 @@ func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	// Create an input for the PutItem operation
-	input := &dynamodb.PutItemInput{
-		TableName: aws.String(os.ExpandEnv("AWS_DYNAMO_TABLE_NAME")),
-		Item:      av,
+	// Create an input for the DeleteItem operation
+	input := &dynamodb.DeleteItemInput{
+		TableName: aws.String(os.Getenv("AWS_DYNAMO_TABLE_NAME")),
+		Key:       av,
 	}
 
-	// Store the item in DynamoDB
-	_, err = db.PutItem(input)
+	// Delete the item from DynamoDB
+	_, err = db.DeleteItem(input)
 	if err != nil {
 		return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
 	// Return a success response
-	response := fmt.Sprintf("Item stored successfully: %+v", item)
+	response := fmt.Sprintf("Item deleted successfully: %+v", item)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       response,
