@@ -32,9 +32,8 @@ func init() {
 }
 
 func TestHandler(t *testing.T) {
-	seed := time.Now().UnixNano()
-	r := rand.New(rand.NewSource(seed))
-	id := r.Intn(1000)
+	// Test setup
+	id := setup(t)
 
 	// Prepare a sample APIGatewayProxyRequest for testing
 	requestBody := fmt.Sprintf(`{"Id": %d, "name": "Test Item"}`, id)
@@ -50,18 +49,25 @@ func TestHandler(t *testing.T) {
 	// Assert the expected response body
 	assert.Equal(t, fmt.Sprintf("Item stored successfully: map[Id:%d name:Test Item]", id), response.Body)
 
+	// Test teardown
+	teardown(t, id)
+}
+
+func setup(t *testing.T) int {
+	seed := time.Now().UnixNano()
+	r := rand.New(rand.NewSource(seed))
+	id := r.Intn(1000)
+	return id
+}
+
+func teardown(t *testing.T, id int) {
 	// Delete the testing entry
-	err = deleteItem(id)
-	if err != nil {
-		fmt.Println("Error deleting item:", err)
-	}
+	err := deleteItem(id)
 	assert.NoError(t, err)
 
 	// Verify the deletion
 	item, err := getItem(id)
-	if err != nil {
-		fmt.Println("Error getting item:", err)
-	}
+	assert.NoError(t, err)
 	assert.Nil(t, item)
 }
 
