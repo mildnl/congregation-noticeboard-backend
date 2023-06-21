@@ -4,28 +4,13 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/joho/godotenv"
 	"github.com/mildnl/congregation-noticeboard-backend/dynamoDb-util"
 	"github.com/stretchr/testify/assert"
 )
-
-var tableName string
-
-func init() {
-	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Error loading .env file:", err)
-	}
-
-	// Retrieve the environment variables
-	tableName = os.Getenv("AWS_DYNAMO_TABLE_NAME")
-}
 
 func TestHandler(t *testing.T) {
 	// Test setup

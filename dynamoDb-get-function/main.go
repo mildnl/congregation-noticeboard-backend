@@ -59,17 +59,25 @@ func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	}
 
 	// Get the item in DynamoDB
-	_, err = db.GetItem(input)
+	result, err := db.GetItem(input)
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	    return events.APIGatewayProxyResponse{StatusCode: 500}, err
 	}
 
-	// Return a success response
-	response := fmt.Sprintf("Item stored successfully: %+v", item)
+	// Unmarshal the DynamoDB result into an Item interface
+	var receivedItem Item
+	err = dynamodbattribute.UnmarshalMap(result.Item, &receivedItem)
+	if err != nil {
+	    return events.APIGatewayProxyResponse{StatusCode: 500}, err
+	}
+
+	// Return the received item in the response body
+	response := fmt.Sprintf("Item: %+v", receivedItem)
 	return events.APIGatewayProxyResponse{
-		StatusCode: 200,
-		Body:       response,
+	    StatusCode: 200,
+	    Body:       response,
 	}, nil
+
 }
 
 func main() {
