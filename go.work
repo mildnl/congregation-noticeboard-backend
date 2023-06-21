@@ -7,4 +7,5 @@ use (
 	./dynamoDb-get-function
 	./dynamoDb-list-function
 	./dynamoDb-store-function
+	./dynamoDb-util
 )
