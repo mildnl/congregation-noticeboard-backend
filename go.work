@@ -3,6 +3,7 @@ go 1.20
 use (
 	.
 	./cognito-login-function
+	./cognito-register-function
 	./dynamoDb-delete-function
 	./dynamoDb-get-function
 	./dynamoDb-list-function
