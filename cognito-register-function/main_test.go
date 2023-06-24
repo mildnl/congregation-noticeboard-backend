@@ -19,7 +19,9 @@ import (
 
 // generatePassword generates a password that satisfies the Cognito password policy requirements.
 func generatePassword() string {
-	rand.Seed(time.Now().UnixNano())
+	// Generate the password
+	source := rand.NewSource(time.Now().UnixNano())
+	random := rand.New(source)
 
 	// Define the password policy requirements
 	minLength := 8
@@ -40,16 +42,16 @@ func generatePassword() string {
 
 	// Add at least one character from each required character set
 	if hasDigit {
-		password += string(digits[rand.Intn(len(digits))])
+		password += string(digits[random.Intn(len(digits))])
 	}
 	if hasLower {
-		password += string(lowerChars[rand.Intn(len(lowerChars))])
+		password += string(lowerChars[random.Intn(len(lowerChars))])
 	}
 	if hasUpper {
-		password += string(upperChars[rand.Intn(len(upperChars))])
+		password += string(upperChars[random.Intn(len(upperChars))])
 	}
 	if hasSpecial {
-		password += string(specialCharSet[rand.Intn(len(specialCharSet))])
+		password += string(specialCharSet[random.Intn(len(specialCharSet))])
 	}
 
 	// Generate the remaining characters
@@ -68,12 +70,12 @@ func generatePassword() string {
 			charSet += specialCharSet
 		}
 
-		password += string(charSet[rand.Intn(len(charSet))])
+		password += string(charSet[random.Intn(len(charSet))])
 	}
 
 	// Shuffle the password string
 	shuffled := []rune(password)
-	rand.Shuffle(len(shuffled), func(i, j int) {
+	random.Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 	
