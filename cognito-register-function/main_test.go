@@ -3,85 +3,18 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	util "github.com/mildnl/congregation-noticeboard-backend/util"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
-
-// generatePassword generates a password that satisfies the Cognito password policy requirements.
-func generatePassword() string {
-	// Generate the password
-	source := rand.NewSource(time.Now().UnixNano())
-	random := rand.New(source)
-
-	// Define the password policy requirements
-	minLength := 8
-	hasDigit := true
-	hasLower := true
-	hasUpper := true
-	hasSpecial := true
-	specialChars := "!@#$%^&*()-_=+{}[]|\\;:'\"<>,.?/~`"
-
-	// Define the character sets
-	digits := "0123456789"
-	lowerChars := "abcdefghijklmnopqrstuvwxyz"
-	upperChars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	specialCharSet := specialChars
-
-	// Initialize the password
-	password := ""
-
-	// Add at least one character from each required character set
-	if hasDigit {
-		password += string(digits[random.Intn(len(digits))])
-	}
-	if hasLower {
-		password += string(lowerChars[random.Intn(len(lowerChars))])
-	}
-	if hasUpper {
-		password += string(upperChars[random.Intn(len(upperChars))])
-	}
-	if hasSpecial {
-		password += string(specialCharSet[random.Intn(len(specialCharSet))])
-	}
-
-	// Generate the remaining characters
-	for i := len(password); i < minLength; i++ {
-		charSet := ""
-		if hasDigit {
-			charSet += digits
-		}
-		if hasLower {
-			charSet += lowerChars
-		}
-		if hasUpper {
-			charSet += upperChars
-		}
-		if hasSpecial {
-			charSet += specialCharSet
-		}
-
-		password += string(charSet[random.Intn(len(charSet))])
-	}
-
-	// Shuffle the password string
-	shuffled := []rune(password)
-	random.Shuffle(len(shuffled), func(i, j int) {
-		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
-	})
-	
-	return password
-}
-
 
 func TestHandler(t *testing.T) {
 	// Load environment variables from .env file
@@ -99,7 +32,7 @@ func TestHandler(t *testing.T) {
 	}`
 
 	// Generate a random password
-	password := generatePassword()
+	password := util.GeneratePassword()
 
 	// Update the request body with the generated password
 	requestBody = strings.Replace(requestBody, `""`, `"`+password+`"`, 1)

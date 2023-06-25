@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mildnl/congregation-noticeboard-backend/dynamoDb-util"
+	util "github.com/mildnl/congregation-noticeboard-backend/util" 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,7 +47,7 @@ func TestHandler(t *testing.T) {
 	assert.Equal(t, fmt.Sprintf("Item deleted successfully: map[Id:%d]", id), response.Body)
 
 	// Retrieve the item using the getItem function
-	item, err := dynamoDb_util.GetItem(id)
+	item, err := util.GetItem(id)
 	assert.NoError(t, err)
 	assert.Nil(t, item)
 }
@@ -64,7 +64,7 @@ func setup(t *testing.T) int {
 		"name": "Test Item",
 	}
 	// Store the testing entry
-	storedId, err := dynamoDb_util.StoreItem(id, testItem )
+	storedId, err := util.StoreItem(id, testItem )
 	if err != nil {
 		t.Errorf("Error storing item: %s", err)
 		return 0

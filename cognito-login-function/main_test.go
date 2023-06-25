@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/stretchr/testify/assert"
+	util "github.com/mildnl/congregation-noticeboard-backend/util"
 )
 
 type mockCognitoClient struct {
@@ -47,6 +48,7 @@ func TestLogin(t *testing.T) {
 	loginReq := LoginRequest{
 		Username:         os.Getenv("USERNAME"),
 		Password:         os.Getenv("PASSWORD"),
+		NewPassword:      util.GeneratePassword(),
 	}
 
 	// Marshal the login request to JSON

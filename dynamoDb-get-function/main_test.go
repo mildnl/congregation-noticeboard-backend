@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/mildnl/congregation-noticeboard-backend/dynamoDb-util"
+	util "github.com/mildnl/congregation-noticeboard-backend/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,7 +44,7 @@ func setup(t *testing.T) int {
 		"name": "Test Item",
 	}
 	// Store the testing entry
-	storedId, err := dynamoDb_util.StoreItem(id, testItem )
+	storedId, err := util.StoreItem(id, testItem )
 	if err != nil {
 		t.Errorf("Error storing item: %s", err)
 		return 0
@@ -58,11 +58,11 @@ func setup(t *testing.T) int {
 
 func teardown(t *testing.T, id int) {
 	// Delete the testing entry
-	err := dynamoDb_util.DeleteItem(id)
+	err := util.DeleteItem(id)
 	assert.NoError(t, err)
 
 	// Verify the deletion
-	item, err := dynamoDb_util.GetItem(id)
+	item, err := util.GetItem(id)
 	assert.NoError(t, err)
 	assert.Nil(t, item)
 }
