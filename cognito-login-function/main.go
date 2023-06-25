@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
@@ -39,7 +41,7 @@ func init() {
 	}
 }
 
-func Login(ctx context.Context, request events.APIGatewayProxyRequest, cognitoClient cognitoidentityprovideriface.CognitoIdentityProviderAPI) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest, cognitoClient cognitoidentityprovideriface.CognitoIdentityProviderAPI) (events.APIGatewayProxyResponse, error) {
 	// Parse the request body
 	var loginReq LoginRequest
 	err := json.Unmarshal([]byte(request.Body), &loginReq)
@@ -64,7 +66,7 @@ func Login(ctx context.Context, request events.APIGatewayProxyRequest, cognitoCl
 		Region: aws.String(os.Getenv("AWS_REGION")),
 	})
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 500}, fmt.Errorf("failed to create AWS session: %v", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to create AWS session: %v", err)
 	}
 
 	client := cognito.New(sess)
@@ -77,7 +79,18 @@ func Login(ctx context.Context, request events.APIGatewayProxyRequest, cognitoCl
 
 	res, err := client.InitiateAuth(authTry)
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 400}, fmt.Errorf("failed to initiate auth: %v", err)
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case cognito.ErrCodeNotAuthorizedException:
+				// Check if the error message indicates an expired password
+				if strings.Contains(aerr.Message(), "expired and must be reset") {
+					// Handle the case where the password has expired
+					return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Password expired. Please reset your password."}, nil
+				}
+			}
+			return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Authentication failed."}, nil
+		}
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, fmt.Errorf("failed to initiate auth: %v", err)
 	}
 
 	response := LoginResponse{
@@ -85,9 +98,10 @@ func Login(ctx context.Context, request events.APIGatewayProxyRequest, cognitoCl
 		AuthResult: res.AuthenticationResult,
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: 200, Body: response.Message}, nil
+	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: response.Message}, nil
 }
 
+
 func main() {
-	lambda.Start(Login)
+	lambda.Start(Handler)
 }

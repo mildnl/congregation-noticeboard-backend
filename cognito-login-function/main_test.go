@@ -76,7 +76,7 @@ func TestLogin(t *testing.T) {
 	}
 
 	// Invoke the Login function
-	response, err := Login(ctx, apiRequest, mockClient)
+	response, err := Handler(ctx, apiRequest, mockClient)
 
 	// Assertions
 	assert.Nil(t, err, "Expected no error")
