@@ -183,23 +183,9 @@ func TestLogin(t *testing.T) {
 
 	// Create a context
 	ctx := context.Background()
-	// Create a mock response from InitiateAuth
-	mockResponse := &cognitoidentityprovider.InitiateAuthOutput{
-		AuthenticationResult: &cognitoidentityprovider.AuthenticationResultType{
-			AccessToken:  aws.String("mockAccessToken"),
-			ExpiresIn:    aws.Int64(3600),
-			RefreshToken: aws.String("mockRefreshToken"),
-			TokenType:    aws.String("Bearer"),
-		},
-	}
-
-	// Create a mock Cognito client
-	mockClient := &mockCognitoClient{
-		Response: mockResponse,
-	}
 
 	// Invoke the Login function
-	response, err := Handler(ctx, apiRequest, mockClient)
+	response, err := Handler(ctx, apiRequest)
 	if err != nil {
 		fmt.Println("Error:", err)
 		t.Fail()

@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/joho/godotenv"
 )
 
@@ -41,13 +40,13 @@ func init() {
 	}
 }
 
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest, cognitoClient cognitoidentityprovideriface.CognitoIdentityProviderAPI) (events.APIGatewayProxyResponse, error) {
-	// Parse the request body
-	var loginReq LoginRequest
-	err := json.Unmarshal([]byte(request.Body), &loginReq)
-	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
-	}
+func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+    // Parse the request body
+    var loginReq LoginRequest
+    err := json.Unmarshal([]byte(request.Body), &loginReq)
+    if err != nil {
+        return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
+    }
 
 	flow := aws.String(flowUsernamePassword)
 	params := map[string]*string{
@@ -107,8 +106,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest, cognito
 
 	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: string(responseJSON)}, nil
 }
-
-
 
 func main() {
 	lambda.Start(Handler)
