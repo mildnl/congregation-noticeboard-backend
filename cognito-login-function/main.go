@@ -26,7 +26,6 @@ type LoginRequest struct {
 	Password     string `json:"password"`
 	Refresh      string `json:"refresh"`
 	RefreshToken string `json:"refresh_token"`
-	NewPassword   string `json:"new_password"`
 }
 
 type LoginResponse struct {
@@ -85,25 +84,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest, cognito
 			case cognito.ErrCodeNotAuthorizedException:
 				// Check if the error message indicates an expired password
 				if strings.Contains(aerr.Message(), "expired and must be reset") {
-					// Handle the case where the password has expired
-					// Check if the NewPassword field is provided
-					if loginReq.NewPassword != "" {
-						// Update the password
-						updatePasswordInput := &cognito.ChangePasswordInput{
-							PreviousPassword: aws.String(loginReq.Password),
-							ProposedPassword: aws.String(loginReq.NewPassword),
-							AccessToken:      aws.String(loginReq.RefreshToken),
-						}
-					
-						_, err := client.ChangePassword(updatePasswordInput)
-						if err != nil {
-							return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: fmt.Sprintf("Failed to update password. Error: %v", err)}, nil
-						}
-					}
+					// Handle the case where the password has expired	
 					return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Password expired. Please reset your password."}, nil
 				}
 			}
-			return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Authentication failed."}, nil
+			return events.APIGatewayProxyResponse{
+				StatusCode: http.StatusBadRequest, 
+			 }, fmt.Errorf("authentication failed: %v", aerr) 
 		}
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, fmt.Errorf("failed to initiate auth: %v", err)
 	}
@@ -113,8 +100,14 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest, cognito
 		AuthResult: res.AuthenticationResult,
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: response.Message}, nil
+	responseJSON, err := json.Marshal(response)
+	if err != nil {
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to marshal response: %v", err)
+	}
+
+	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: string(responseJSON)}, nil
 }
+
 
 
 func main() {

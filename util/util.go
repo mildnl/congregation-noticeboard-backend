@@ -1,9 +1,12 @@
 package util
 
 import (
+	cryptRand "crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"math/rand"
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -185,4 +188,21 @@ func GeneratePassword() string {
 	})
 	
 	return password
+}
+
+// GenerateAccessToken generates a random access token.
+func GenerateAccessToken() (string, error) {
+	tokenBytes := make([]byte, 32) // Generate a 256-bit random token
+	_, err := cryptRand.Read(tokenBytes)
+	if err != nil {
+		return "", err
+	}
+
+	accessToken := base64.URLEncoding.EncodeToString(tokenBytes)
+
+	// Remove characters that don't match the required pattern
+	re := regexp.MustCompile("[^A-Za-z0-9-_=.]")
+	accessToken = re.ReplaceAllString(accessToken, "")
+
+	return accessToken, nil
 }
