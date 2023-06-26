@@ -33,16 +33,6 @@ type TestUser struct {
 
 var testUserPassword string
 
-type mockCognitoClient struct {
-	cognitoidentityprovideriface.CognitoIdentityProviderAPI
-	Response *cognitoidentityprovider.InitiateAuthOutput
-	Err      error
-}
-
-func (m *mockCognitoClient) InitiateAuthWithContext(ctx aws.Context, input *cognitoidentityprovider.InitiateAuthInput, opts ...request.Option) (*cognitoidentityprovider.InitiateAuthOutput, error) {
-	return m.Response, m.Err
-}
-
 func TestMain(m *testing.M) {
 	// setup
 	setup()
