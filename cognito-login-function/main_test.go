@@ -13,11 +13,8 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	util "github.com/mildnl/congregation-noticeboard-backend/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,10 +23,11 @@ type TestUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	family_name string `json:"family_name"`
-	given_name string `json:"given_name"`
-	phone_number string `json:"phone_number"`
+	Family_name string `json:"family_name"`
+	Given_name string `json:"given_name"`
+	Phone_number string `json:"phone_number"`
 }
+
 
 var testUserPassword string
 
@@ -58,7 +56,7 @@ func setup() {
 	requestBody := `{
 		"family_name": "Test",
 		"given_name": "User",
-		"phone_number": "1234567890",
+		"phone_number": "+491625467822",
 		"username": "testuser",
 		"password": "",
 		"email": "test@example.com"
@@ -99,15 +97,15 @@ func setup() {
 			},
 			{
 				Name:  aws.String("family_name"),
-				Value: aws.String(user.family_name),
+				Value: aws.String(user.Family_name),
 			},
 			{
 				Name:  aws.String("given_name"),
-				Value: aws.String(user.given_name),
+				Value: aws.String(user.Given_name),
 			},
 			{
 				Name:  aws.String("phone_number"),
-				Value: aws.String(user.phone_number),
+				Value: aws.String(user.Phone_number),
 			},
 		},
 	}

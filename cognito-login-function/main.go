@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -28,8 +29,8 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Message    string                            `json:"message"`
-	AuthResult *cognito.AuthenticationResultType `json:"auth_result"`
+	Message    string     `json:"message"`
+	AuthResult *cognito.AuthenticationResultType `json:"auth_result,omitempty"`
 }
 
 func init() {
@@ -101,6 +102,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
+		log.Println("Failed to marshal response:", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to marshal response: %v", err)
 	}
 
