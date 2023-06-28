@@ -36,3 +36,7 @@ logs/
 
 # Ignore macOS system files
 .DS_Store
+
+# Other
+**/Handler
+**/*.zip
