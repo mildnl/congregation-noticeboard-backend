@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	cognito "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	util "github.com/mildnl/congregation-noticeboard-backend/util"
 	"github.com/joho/godotenv"
 )
 
@@ -38,7 +39,7 @@ type AuthResult struct {
 
 type LoginResponse struct {
 	Message    string     `json:"message"`
-	AuthResult *AuthResult `json:"auth_result"`
+	AuthResult *cognito.AuthenticationResultType `json:"auth_result,omitempty"`
 }
 
 func init() {
@@ -138,20 +139,11 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}, nil
 	}
 
-	authResultResponse := res.AuthenticationResult
-
-	authResult := &AuthResult{
-		AccessToken:      *authResultResponse.AccessToken,
-		ExpiresIn:        *authResultResponse.ExpiresIn,
-		IdToken:          *authResultResponse.IdToken,
-		RefreshToken:     *authResultResponse.RefreshToken,
-		TokenType:        *authResultResponse.TokenType,
-	}
-
 	response := LoginResponse{
 		Message:    "Authentication successful",
-		AuthResult: authResult,
+		AuthResult: res.AuthenticationResult,
 	}
+	fmt.Println(response)
 
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
@@ -159,7 +151,20 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to marshal response: %v", err)
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusOK, Body: string(responseJSON)}, nil
+	token, err := util.GenerateAccessToken()
+	if err != nil {
+		log.Println("Failed to generate access token:", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to generate access token: %v", err)
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode: http.StatusOK,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+			"auth": token,
+			}, 
+		Body: string(responseJSON),
+		}, nil
 }
 
 func main() {
