@@ -28,9 +28,17 @@ type LoginRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type AuthResult struct {
+	AccessToken      string `json:"access_token"`
+	ExpiresIn        int64  `json:"expires_in"`
+	IdToken          string `json:"id_token"`
+	RefreshToken     string `json:"refresh_token"`
+	TokenType        string `json:"token_type"`
+}
+
 type LoginResponse struct {
 	Message    string     `json:"message"`
-	AuthResult *cognito.AuthenticationResultType `json:"auth_result,omitempty"`
+	AuthResult *AuthResult `json:"auth_result"`
 }
 
 func init() {
@@ -42,12 +50,16 @@ func init() {
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-    // Parse the request body
-    var loginReq LoginRequest
-    err := json.Unmarshal([]byte(request.Body), &loginReq)
-    if err != nil {
-        return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
-    }
+	// Parse the request body
+	var loginReq LoginRequest
+	err := json.Unmarshal([]byte(request.Body), &loginReq)
+	if err != nil {
+		log.Println("Failed to unmarshal request body:", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       "Invalid request payload",
+		}, nil
+	}
 
 	flow := aws.String(flowUsernamePassword)
 	params := map[string]*string{
@@ -66,7 +78,10 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Region: aws.String(os.Getenv("AWS_REGION")),
 	})
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, fmt.Errorf("failed to create AWS session: %v", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Body:       "Failed to create AWS session",
+		}, err
 	}
 
 	client := cognito.New(sess)
@@ -84,20 +99,58 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			case cognito.ErrCodeNotAuthorizedException:
 				// Check if the error message indicates an expired password
 				if strings.Contains(aerr.Message(), "expired and must be reset") {
-					// Handle the case where the password has expired	
-					return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest, Body: "Password expired. Please reset your password."}, nil
+					// Handle the case where the password has expired
+					return events.APIGatewayProxyResponse{
+						StatusCode: http.StatusBadRequest,
+						Body:       "Password expired. Please reset your password.",
+					}, nil
 				}
+			case cognito.ErrCodeUserNotFoundException:
+				// Handle the case where the user does not exist
+				return events.APIGatewayProxyResponse{
+					StatusCode: http.StatusBadRequest,
+					Body:       "User not found",
+				}, nil
+			case cognito.ErrCodeInvalidParameterException:
+				// Handle the case where the password is invalid
+				return events.APIGatewayProxyResponse{
+					StatusCode: http.StatusBadRequest,
+					Body:       "Invalid password",
+				}, nil
+			case cognito.ErrCodeUserLambdaValidationException:
+				log.Printf("Lambda validation failed: %s", aerr.Message())
+				// Handle the case where the password is invalid
+				return events.APIGatewayProxyResponse{
+					StatusCode: http.StatusBadRequest,
+					Body:       fmt.Sprintf("Lambda validation failed: %s", aerr.Message()),
+				}, nil
 			}
+			log.Println("Authentication failed:", aerr)
 			return events.APIGatewayProxyResponse{
-				StatusCode: http.StatusBadRequest, 
-			 }, fmt.Errorf("authentication failed: %v", aerr) 
+				StatusCode: http.StatusBadRequest,
+				Body:       fmt.Sprintf("Authentication failed: %s", aerr.Message()),
+			}, nil
 		}
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, fmt.Errorf("failed to initiate auth: %v", err)
+		log.Println("Failed to initiate auth:", err)
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Body:       "Failed to initiate auth",
+		}, nil
+	}
+
+	authResultResponse := res.AuthenticationResult
+
+	authResult := &AuthResult{
+		AccessToken:      *authResultResponse.AccessToken,
+		ExpiresIn:        *authResultResponse.ExpiresIn,
+		IdToken:          *authResultResponse.IdToken,
+		RefreshToken:     *authResultResponse.RefreshToken,
+		TokenType:        *authResultResponse.TokenType,
 	}
 
 	response := LoginResponse{
 		Message:    "Authentication successful",
-		AuthResult: res.AuthenticationResult,
+		AuthResult: authResult,
 	}
 
 	responseJSON, err := json.Marshal(response)
