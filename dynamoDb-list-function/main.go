@@ -84,7 +84,12 @@ func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 	}
 
 	// Set the batchGetItems slice as the value of the table in the input
-	input.RequestItems[os.Getenv("AWS_DYNAMO_TABLE_NAME")].Keys = batchGetItems
+	keys := make([]map[string]*dynamodb.AttributeValue, len(batchGetItems))
+	for i, keysAndAttributes := range batchGetItems {
+		keys[i] = keysAndAttributes.Keys[0]
+	}
+	input.RequestItems[os.Getenv("AWS_DYNAMO_TABLE_NAME")].Keys = keys
+	
 
 	// Get the items from DynamoDB
 	result, err := db.BatchGetItem(input)
