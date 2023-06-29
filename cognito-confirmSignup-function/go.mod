@@ -9,7 +9,4 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 )
 
-require (
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-)
+require github.com/jmespath/go-jmespath v0.4.0 // indirect
