@@ -23,7 +23,7 @@ func TestHandler(t *testing.T) {
 	}
 
 	// Invoke the handler function
-	response, err := handler(context.Background(), request)
+	response, err := Handler(context.Background(), request)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, response.StatusCode)
 

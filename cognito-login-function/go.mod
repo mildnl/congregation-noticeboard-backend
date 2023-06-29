@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-lambda-go v1.41.0
 	github.com/aws/aws-sdk-go v1.44.284
 	github.com/joho/godotenv v1.5.1
+	github.com/mildnl/congregation-noticeboard-backend/util v0.0.0-20230628210507-cae21b9cbac5
 	github.com/stretchr/testify v1.8.4
 )
 

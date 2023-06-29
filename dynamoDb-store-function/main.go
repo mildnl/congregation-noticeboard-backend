@@ -27,7 +27,7 @@ func init() {
 	}
 }
 
-func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	// Create a new DynamoDB session
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(os.Getenv("AWS_REGION")),
@@ -73,5 +73,5 @@ func handler(ctx context.Context, event events.APIGatewayProxyRequest) (events.A
 }
 
 func main() {
-	lambda.Start(handler)
+	lambda.Start(Handler)
 }
