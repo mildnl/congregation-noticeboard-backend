@@ -40,7 +40,7 @@ func StoreItem(id int, item interface{}) (int, error) {
 	// Marshal the item into a DynamoDB attribute value map
 	av, err := dynamodbattribute.MarshalMap(item)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to store item with ID %d: %w", id, err)
 	}
 
 	// Create the input for the PutItem operation
@@ -52,7 +52,7 @@ func StoreItem(id int, item interface{}) (int, error) {
 	// Perform the PutItem operation to store the item in DynamoDB
 	_, err = svc.PutItem(input)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to store item with ID %d: %w", id, err)
 	}
 
 	// Return the stored ID

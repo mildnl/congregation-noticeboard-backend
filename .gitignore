@@ -40,3 +40,4 @@ logs/
 # Other
 **/Handler
 **/*.zip
+**/*.zip.icloud
