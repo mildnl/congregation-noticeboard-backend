@@ -162,11 +162,14 @@ func TestLogin(t *testing.T) {
 	}
 
 	// Marshal the login request to JSON
-	reqJSON, _ := json.Marshal(loginReq)
+	reqJSON, _ := json.Marshal(&loginReq)
 
 	// Create a sample API Gateway Proxy request
 	apiRequest := events.APIGatewayProxyRequest{
-		Body: string(reqJSON),
+	    Body: string(reqJSON),
+	}
+	apiRequest.Headers = map[string]string{
+	    "Content-Type": "application/json",
 	}
 
 	// Create a context

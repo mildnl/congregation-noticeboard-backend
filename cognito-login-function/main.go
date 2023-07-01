@@ -51,6 +51,7 @@ func init() {
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	fmt.Println("Received request:", request)
 	// Parse the request body
 	var loginReq LoginRequest
 	err := json.Unmarshal([]byte(request.Body), &loginReq)
@@ -143,7 +144,6 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		Message:    "Authentication successful",
 		AuthResult: res.AuthenticationResult,
 	}
-	fmt.Println(response)
 
 	responseJSON, err := json.Marshal(response)
 	if err != nil {
